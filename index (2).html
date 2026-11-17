@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#081426">
+<title>理科ワードチャレンジ - 地学</title>
+<style>
+:root{
+  --bg:#081426;--panel:#12243c;--panel2:#1a3150;--text:#f3f7ff;
+  --muted:#a9bad0;--accent:#57d6c5;--accent2:#79a9ff;
+  --danger:#ff7185;--gold:#ffd166;--line:#294766;
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--bg)}
+body{
+  margin:0;min-height:100vh;padding:clamp(10px,3vw,24px);
+  background:radial-gradient(circle at 15% 10%,#18385a 0,transparent 34%),
+             radial-gradient(circle at 90% 80%,#153e4a 0,transparent 30%),var(--bg);
+  color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  display:flex;justify-content:center;align-items:center;
+}
+button,input{font:inherit}
+button{touch-action:manipulation}
+.app{
+  width:min(760px,100%);min-height:580px;
+  background:rgba(12,29,49,.96);border:1px solid var(--line);
+  border-radius:26px;padding:clamp(18px,4.5vw,40px);
+  box-shadow:0 24px 80px #0007;position:relative;isolation:isolate;
+}
+.app:before{
+  content:"";position:absolute;width:260px;height:260px;border:1px solid #57d6c522;
+  border-radius:50%;right:-130px;top:-130px;
+  box-shadow:0 0 0 28px #57d6c50b,0 0 0 58px #57d6c508;
+  pointer-events:none;z-index:-1;
+}
+.screen{display:none;position:relative;z-index:1}
+.screen.active{display:block}
+.brand{letter-spacing:.16em;color:var(--accent);font-weight:800;font-size:.78rem}
+h1{font-size:clamp(2.1rem,7vw,4rem);line-height:1.1;margin:18px 0 12px}
+h2{font-size:clamp(1.55rem,4vw,2.2rem);margin:8px 0 16px}
+p{color:var(--muted);line-height:1.7;margin:10px 0 18px}
+.hero{padding:22px 0 20px}
+.atom{height:130px;display:grid;place-items:center;font-size:5rem;color:var(--accent);text-shadow:0 0 35px #57d6c588}
+.btn{
+  border:0;border-radius:14px;padding:15px 18px;min-height:52px;
+  font-size:1rem;font-weight:800;cursor:pointer;transition:transform .15s,filter .15s;
+  width:100%;color:#062126;background:var(--accent);box-shadow:0 8px 24px #57d6c522;
+}
+.btn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.07)}
+.btn:focus-visible,.choice:focus-visible,input:focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn.secondary{background:var(--panel2);color:var(--text);border:1px solid #35516f;box-shadow:none}
+.btn.danger{background:var(--danger);color:#2c0710}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px;margin:22px 0}
+.choice{
+  width:100%;min-width:0;background:linear-gradient(145deg,#1a3554,#10233a);
+  border:1px solid #35516f;border-radius:18px;padding:20px;text-align:left;
+  cursor:pointer;color:var(--text);min-height:120px;transition:.15s;
+}
+.choice:hover{border-color:var(--accent);transform:translateY(-2px)}
+.choice strong{display:block;font-size:1.12rem;margin-bottom:8px}
+.choice span{display:block;color:var(--muted);font-size:.9rem;line-height:1.55}
+.pill{display:inline-block;border:1px solid #42617f;color:var(--accent);border-radius:999px;padding:6px 12px;font-size:.8rem;margin:4px 5px 4px 0}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{background:#10233a;border:1px solid #2b4867;border-radius:12px;padding:9px 12px;color:var(--muted);font-size:.84rem}
+.stat b{color:var(--text);margin-left:5px}
+.progress{height:8px;background:#203752;border-radius:99px;overflow:hidden;margin:12px 0 22px}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .25s}
+.question-card{background:linear-gradient(145deg,#172f4c,#10243b);border:1px solid #34516f;border-radius:20px;padding:clamp(20px,4vw,32px);margin:14px 0 18px}
+.qnum{color:var(--accent);font-weight:800;font-size:.88rem;letter-spacing:.08em}
+.question{font-size:clamp(1.18rem,3.6vw,1.75rem);font-weight:750;line-height:1.6;margin:14px 0 2px;overflow-wrap:anywhere}
+.answer-label{display:block;margin-bottom:8px}
+.answer-input{
+  display:block;width:100%;min-width:0;padding:16px 17px;border-radius:13px;
+  border:1px solid #42617f;background:#09192b;color:var(--text);font-size:1.05rem;outline:none;
+}
+.answer-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #57d6c522}
+.answer-input:disabled{opacity:.7}
+.feedback{min-height:42px;margin:12px 0;color:var(--gold);font-weight:700;line-height:1.55}
+.feedback.good{color:var(--accent)}.feedback.bad{color:var(--danger)}
+.actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.55fr);gap:10px}
+.small{font-size:.84rem;color:var(--muted)}
+.result-score{font-size:clamp(2.8rem,10vw,4rem);font-weight:900;color:var(--accent);margin:10px 0}
+.result-list{background:#10233a;border-radius:14px;padding:14px 16px;margin:18px 0;max-height:min(32vh,260px);overflow:auto;overscroll-behavior:contain}
+.result-list>div{padding:10px 0;border-bottom:1px solid #29415c;color:var(--muted);line-height:1.6}
+.result-list>div:last-child{border-bottom:0}
+.result-list b{color:var(--text)}
+.result-buttons{display:grid;gap:10px}
+
+
+.game-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,300px);gap:20px;align-items:start}
+.game-main{min-width:0}
+.calculator{position:sticky;top:16px;margin:0;background:linear-gradient(145deg,#142b46,#0d2035);border:1px solid #35516f;border-radius:18px;padding:14px}
+.calculator[hidden]{display:none}
+@media(max-width:760px){
+  .game-layout{grid-template-columns:minmax(0,1fr)}
+  .calculator{position:static;max-width:420px;width:100%;margin:0 auto}
+}
+
+.calc-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.calc-display{width:100%;min-width:0;background:#071729;border:1px solid #42617f;border-radius:11px;color:var(--text);padding:13px 14px;text-align:right;font-size:1.45rem;font-weight:750;margin-bottom:10px;overflow:hidden}
+.calc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.calc-key{min-width:0;min-height:44px;border:1px solid #35516f;border-radius:10px;background:#1a3554;color:var(--text);font-weight:750;font-size:1rem;cursor:pointer}
+.calc-key:hover{border-color:var(--accent);filter:brightness(1.12)}
+.calc-key.operator{color:var(--accent);background:#102c3c}
+.calc-key.equal{background:var(--accent);color:#062126;border-color:var(--accent)}
+.calc-key.clear{color:var(--danger)}
+.calc-note{margin:9px 0 0;font-size:.78rem;color:var(--muted)}
+@media(max-width:520px){.calculator{padding:11px}.calc-key{min-height:42px}}
+
+@media(max-width:520px){
+  body{padding:8px;align-items:flex-start}
+  .app{padding:19px 16px;min-height:0;border-radius:20px;margin:auto 0}
+  .atom{height:105px;font-size:4.2rem}
+  .choices{grid-template-columns:1fr}
+  .choice{min-height:unset}
+  .actions{grid-template-columns:1fr}
+  .topline{align-items:flex-start}
+  .stats{width:100%}
+  .stat{flex:1}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <section id="start" class="screen active">
+    <div class="brand">SCIENCE × WORD GAME</div>
+    <div class="hero">
+      <div class="atom" aria-hidden="true">⚛</div>
+      <h1>理科ワード<br>チャレンジ</h1>
+      <p>地学の知識を思い出して、答えを入力しよう。<br>整理した問題からランダムに10問出題！</p>
+      <span class="pill">中学2年</span><span class="pill">地学</span><span class="pill">雲・天気</span><span class="pill">入力式</span>
+    </div>
+    <button class="btn" onclick="showScreen('mode')">START　→</button>
+  </section>
+
+  <section id="mode" class="screen">
+    <div class="brand">STEP 01 / GAME MODE</div>
+    <h2>モード選択</h2>
+    <p>遊び方を選んでください。</p>
+    <div class="choices">
+      <button class="choice" onclick="startGame('normal')"><strong>NORMAL</strong><span>全10問。自分のペースで解こう。</span></button>
+      <button class="choice" onclick="startGame('survival')"><strong>SURVIVAL</strong><span>1問でも間違えると終了。</span></button>
+      <button class="choice" onclick="startGame('time')"><strong>TIME ATTACK</strong><span>60秒以内に10問。時間との勝負！</span></button>
+      <button class="choice" onclick="startGame('calculation')"><strong>CALCULATION</strong><span>Pa・N・面積・湿度・水蒸気量・水滴量の計算問題に挑戦。</span></button>
+    </div>
+    <p class="small">※どのモードも同じ問題データからランダムに出題します。</p>
+    <button class="btn secondary" onclick="showScreen('start')">← 戻る</button>
+  </section>
+
+  <section id="game" class="screen">
+    <div class="topline">
+      <div><div class="brand" id="modeLabel">NORMAL</div><div class="small">地学 / 雲・天気</div></div>
+      <div class="stats">
+        <div class="stat">問題<b id="count">1 / 10</b></div>
+        <div class="stat">正解<b id="score">0</b></div>
+        <div class="stat" id="timerBox" hidden>残り<b id="timer">60</b>秒</div>
+      </div>
+    </div>
+    <div class="progress" aria-label="進行状況"><div id="progressBar"></div></div>
+    <div class="game-layout">
+      <div class="game-main">
+        <div class="question-card">
+          <div class="qnum" id="qnum">QUESTION 01</div>
+          <div class="question" id="question">問題文</div>
+        </div>
+        <label class="small answer-label" for="answer">答えを入力</label>
+        <input class="answer-input" id="answer" type="text" placeholder="ここに答えを入力" autocomplete="off" spellcheck="false">
+        <div class="feedback" id="feedback" aria-live="polite"></div>
+        <div class="actions">
+          <button class="btn" id="submitBtn" onclick="locked?advanceQuestion():submitAnswer()">回答する</button>
+          <button class="btn secondary" onclick="quitGame()">やめる</button>
+        </div>
+        <p class="small" id="modeNote">Enterキーでも回答できます。</p>
+      </div>
+      <aside class="calculator" id="calculator" hidden>
+      <div class="calc-head"><strong>電卓</strong><span class="small">計算結果を答え欄に入力できます</span></div>
+      <div class="calc-display" id="calcDisplay" aria-live="polite" tabindex="0" role="textbox" aria-label="電卓入力欄">0</div>
+      <div class="calc-grid">
+        <button class="calc-key clear" onclick="calcClear()">AC</button><button class="calc-key" onclick="calcBack()">⌫</button><button class="calc-key operator" onclick="calcInput('(')">(</button><button class="calc-key operator" onclick="calcInput(')')">)</button>
+        <button class="calc-key" onclick="calcInput('7')">7</button><button class="calc-key" onclick="calcInput('8')">8</button><button class="calc-key" onclick="calcInput('9')">9</button><button class="calc-key operator" onclick="calcInput('÷')">÷</button>
+        <button class="calc-key" onclick="calcInput('4')">4</button><button class="calc-key" onclick="calcInput('5')">5</button><button class="calc-key" onclick="calcInput('6')">6</button><button class="calc-key operator" onclick="calcInput('×')">×</button>
+        <button class="calc-key" onclick="calcInput('1')">1</button><button class="calc-key" onclick="calcInput('2')">2</button><button class="calc-key" onclick="calcInput('3')">3</button><button class="calc-key operator" onclick="calcInput('-')">−</button>
+        <button class="calc-key" onclick="calcInput('0')">0</button><button class="calc-key" onclick="calcInput('.')">.</button><button class="calc-key equal" onclick="calcEquals()">＝</button><button class="calc-key operator" onclick="calcInput('+')">＋</button>
+      </div>
+      <button class="btn secondary" style="margin-top:9px" onclick="calcUseAnswer()">計算結果を答え欄に入れる</button>
+      <p class="calc-note">四則演算・小数・かっこに対応。テンキーでも入力できます。</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="result" class="screen">
+    <div class="brand">RESULT</div>
+    <h2 id="resultTitle">チャレンジ終了！</h2>
+    <div class="result-score" id="resultScore">0 / 10</div>
+    <p id="resultMessage">おつかれさま！</p>
+    <div class="stats">
+      <div class="stat">正解率<b id="accuracy">0%</b></div>
+      <div class="stat">挑戦モード<b id="resultMode">NORMAL</b></div>
+    </div>
+    <div class="result-list" id="review"></div>
+    <div class="result-buttons">
+      <button class="btn" onclick="showScreen('mode')">もう一度プレイ</button>
+      <button class="btn secondary" onclick="showScreen('start')">タイトルへ戻る</button>
+    </div>
+  </section>
+</main>
+
+<script>
+// 同じ知識を重ねて出題していた問題を整理・統合した問題データ
+const bank = [
+ {q:"地球を取り巻いている空気の層を何という？",a:["大気"]},
+ {q:"大気が物体の表面を押す力を何という？",a:["気圧","大気圧"]},
+ {q:"気圧を測定する器具を何という？",a:["気圧計","アネロイド気圧計","水銀気圧計"]},
+ {q:"気圧の単位として使われる記号は？",a:["hpa","ヘクトパスカル","パスカル","pa"]},
+ {q:"天気・気温・湿度・風向・風速などを調べることを何という？",a:["気象観測"]},
+ {q:"風が吹いてくる方向を何という？",a:["風向"]},
+ {q:"風の吹く速さを何という？",a:["風速"]},
+ {q:"天気図で、同じ気圧の地点を結んだ線を何という？",a:["等圧線"]},
+ {q:"周囲より気圧が高いところを何という？",a:["高気圧"]},
+ {q:"周囲より気圧が低いところを何という？",a:["低気圧"]},
+ {q:"風は基本的に、気圧の高いところと低いところのどちらからどちらへ吹く？",a:["高いところから低いところ","高気圧から低気圧","高い方から低い方"]},
+ {q:"空気1m³中に実際に含まれている水蒸気の質量を何という？",a:["水蒸気量","実際の水蒸気量"]},
+ {q:"ある気温で、空気1m³中に含むことのできる水蒸気の最大量を何という？",a:["飽和水蒸気量"]},
+ {q:"空気中に含まれる水蒸気の割合を百分率で表したものを何という？",a:["湿度","相対湿度"]},
+ {q:"湿度を求める式は「実際の水蒸気量 ÷ 何 × 100」？",a:["飽和水蒸気量"]},
+ {q:"空気を冷やしたとき、水蒸気が水滴になり始める温度を何という？",a:["露点"]},
+ {q:"水面などから水が水蒸気に変わることを何という？",a:["蒸発"]},
+ {q:"水蒸気が冷やされて水滴に変わることを何という？",a:["凝結"]},
+ {q:"水が水蒸気に変化するとき、周囲から奪う熱を何という？",a:["気化熱"]},
+ {q:"雲をつくっている小さな水滴や氷の粒を何という？",a:["雲粒"]},
+ {q:"水蒸気を含んだ空気が上昇し、膨張して温度が下がる変化を何という？",a:["膨張"]},
+ {q:"空気が上昇すると、周囲の気圧が低くなるため体積はどうなる？",a:["大きくなる","膨張する"]},
+ {q:"上昇した空気が冷やされ、水蒸気が凝結してできるものは？",a:["雲"]},
+ {q:"地表付近の空気が暖められ、軽くなって上昇する流れを何という？",a:["上昇気流"]},
+ {q:"空気が下降する流れを何という？",a:["下降気流"]},
+ {q:"上昇気流が発生すると、雲ができやすくなるのはなぜ？",a:["空気が上昇して膨張し温度が下がるから","上昇した空気が膨張して冷えるから","温度が下がり水蒸気が凝結するから"]},
+ {q:"雲ができるとき、水蒸気は何に変化する？",a:["水滴","氷の粒","水滴や氷の粒"]},
+ {q:"空気中の水蒸気が水滴になり始める温度に達したとき、湿度はおよそ何％になる？",a:["100","100%","100パーセント"]},
+ {q:"空気が上昇すると、気圧と温度はそれぞれどうなる？",a:["気圧が下がり温度も下がる","どちらも下がる","低くなる"]},
+ {q:"高気圧の中心付近では、空気は上昇・下降のどちらをする？",a:["下降","下降気流"]},
+ {q:"低気圧の中心付近では、空気は上昇・下降のどちらをする？",a:["上昇","上昇気流"]},
+ {q:"一般に、上昇気流ができやすいのは高気圧と低気圧のどちら？",a:["低気圧"]},
+ {q:"一般に、下降気流ができやすいのは高気圧と低気圧のどちら？",a:["高気圧"]}
+];
+const calculationBank = [
+ // 圧力（Pa）: 圧力＝力÷面積
+ {q:"面積2m²の面を、20Nの力で垂直に押した。圧力は何Pa？",a:["10"],unit:"Pa",explain:"圧力＝力÷面積。20÷2＝10Pa"},
+ {q:"面積0.5m²の面に、30Nの力を垂直に加えた。圧力は何Pa？",a:["60"],unit:"Pa",explain:"30÷0.5＝60Pa"},
+ {q:"面積4m²の面に、100Nの力を垂直に加えた。圧力は何Pa？",a:["25"],unit:"Pa",explain:"100÷4＝25Pa"},
+ {q:"面積0.2m²の面を、8Nの力で押した。圧力は何Pa？",a:["40"],unit:"Pa",explain:"8÷0.2＝40Pa"},
+ {q:"面積5m²の面に、15Nの力が垂直にはたらく。圧力は何Pa？",a:["3"],unit:"Pa",explain:"15÷5＝3Pa"},
+
+ // 力（N）: 力＝圧力×面積
+ {q:"面積3m²の面に、圧力20Paがはたらいている。力は何N？",a:["60"],unit:"N",explain:"力＝圧力×面積。20×3＝60N"},
+ {q:"面積0.5m²の面に、圧力80Paがはたらく。力は何N？",a:["40"],unit:"N",explain:"80×0.5＝40N"},
+ {q:"面積4m²の面に、圧力12Paがはたらいている。力は何N？",a:["48"],unit:"N",explain:"12×4＝48N"},
+ {q:"面積0.2m²の面に、圧力150Paがはたらく。力は何N？",a:["30"],unit:"N",explain:"150×0.2＝30N"},
+ {q:"面積2.5m²の面に、圧力4Paがはたらいている。力は何N？",a:["10"],unit:"N",explain:"4×2.5＝10N"},
+
+ // 面積（m²）: 面積＝力÷圧力
+ {q:"10Nの力を加えたところ、圧力は5Paになった。面積は何m²？",a:["2"],unit:"m²",explain:"面積＝力÷圧力。10÷5＝2m²"},
+ {q:"24Nの力で押したとき、圧力が12Paになった。面積は何m²？",a:["2"],unit:"m²",explain:"24÷12＝2m²"},
+ {q:"15Nの力で押したとき、圧力が60Paになった。面積は何m²？",a:["0.25"],unit:"m²",explain:"15÷60＝0.25m²"},
+ {q:"50Nの力で押したとき、圧力が10Paになった。面積は何m²？",a:["5"],unit:"m²",explain:"50÷10＝5m²"},
+ {q:"18Nの力で押したとき、圧力が90Paになった。面積は何m²？",a:["0.2"],unit:"m²",explain:"18÷90＝0.2m²"},
+
+ // 湿度（%）: 湿度＝実際の水蒸気量÷飽和水蒸気量×100
+ {q:"実際の水蒸気量が8g/m³、飽和水蒸気量が20g/m³のとき、湿度は何％？",a:["40"],unit:"%",explain:"8÷20×100＝40％"},
+ {q:"実際の水蒸気量が12g/m³、飽和水蒸気量が15g/m³のとき、湿度は何％？",a:["80"],unit:"%",explain:"12÷15×100＝80％"},
+ {q:"実際の水蒸気量が9g/m³、飽和水蒸気量が18g/m³のとき、湿度は何％？",a:["50"],unit:"%",explain:"9÷18×100＝50％"},
+ {q:"実際の水蒸気量が15g/m³、飽和水蒸気量が20g/m³のとき、湿度は何％？",a:["75"],unit:"%",explain:"15÷20×100＝75％"},
+ {q:"実際の水蒸気量が6g/m³、飽和水蒸気量が8g/m³のとき、湿度は何％？",a:["75"],unit:"%",explain:"6÷8×100＝75％"},
+
+ // さらに含むことのできる水蒸気量（g/m³）
+ {q:"実際の水蒸気量は9g/m³、飽和水蒸気量は14g/m³。あと何g/m³の水蒸気を含むことができる？",a:["5"],unit:"g/m³",explain:"飽和水蒸気量－実際の水蒸気量。14－9＝5g/m³"},
+ {q:"実際の水蒸気量は7g/m³、飽和水蒸気量は20g/m³。あと何g/m³含むことができる？",a:["13"],unit:"g/m³",explain:"20－7＝13g/m³"},
+ {q:"実際の水蒸気量は12g/m³、飽和水蒸気量は16g/m³。あと何g/m³含むことができる？",a:["4"],unit:"g/m³",explain:"16－12＝4g/m³"},
+ {q:"湿度が50％で、飽和水蒸気量が18g/m³。あと何g/m³の水蒸気を含むことができる？",a:["9"],unit:"g/m³",explain:"実際の水蒸気量は18×0.5＝9g/m³。18－9＝9g/m³"},
+ {q:"湿度が75％で、飽和水蒸気量が12g/m³。あと何g/m³含むことができる？",a:["3"],unit:"g/m³",explain:"実際の水蒸気量は12×0.75＝9g/m³。12－9＝3g/m³"},
+
+ // 冷やしたときにできる水滴の量（g/m³）
+ {q:"空気1m³に水蒸気が18g含まれている。この空気を冷やすと、飽和水蒸気量は10g/m³になった。できる水滴は何g？",a:["8"],unit:"g",explain:"水滴の量＝冷やす前の水蒸気量－冷やした後の飽和水蒸気量。18－10＝8g"},
+ {q:"空気1m³に水蒸気が15g含まれている。冷やした後の飽和水蒸気量が9g/m³になった。できる水滴は何g？",a:["6"],unit:"g",explain:"15－9＝6g"},
+ {q:"空気1m³に水蒸気が12g含まれている。冷やした後の飽和水蒸気量が8g/m³になった。できる水滴は何g？",a:["4"],unit:"g",explain:"12－8＝4g"},
+ {q:"空気1m³に水蒸気が20g含まれている。冷やした後の飽和水蒸気量が14g/m³になった。できる水滴は何g？",a:["6"],unit:"g",explain:"20－14＝6g"},
+ {q:"空気1m³に水蒸気が16g含まれている。冷やした後の飽和水蒸気量が16g/m³になった。できる水滴は何g？",a:["0"],unit:"g",explain:"16－16＝0g。水蒸気量が飽和水蒸気量を超えないため、水滴はできません。"}
+];
+
+let selected=[],index=0,score=0,mode="normal",timerId=null,timeLeft=60,locked=false,history=[],finished=false;
+let calcExpression="";
+const modeNames={normal:"NORMAL",survival:"SURVIVAL",time:"TIME ATTACK",calculation:"CALCULATION"};
+const $=id=>document.getElementById(id);
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function normalize(s){
+  return s.toLowerCase().replace(/[ 　\t。、．，,・]/g,"")
+    .replace(/パーセント/g,"%").replace(/ヘクトパスカル/g,"hpa");
+}
+function shuffle(list){
+  const a=[...list];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function startGame(m){
+  stopTimer();mode=m;selected=shuffle(m==="calculation"?calculationBank:bank).slice(0,10);index=0;score=0;history=[];
+  timeLeft=60;locked=false;finished=false;calcClear();
+  $("modeLabel").textContent=modeNames[m];
+  $("timerBox").hidden=m!=="time";
+  $("calculator").hidden=m!=="calculation";
+  $("modeNote").textContent=m==="survival"?"1問でも間違えるとゲーム終了。":m==="calculation"?"計算モード：Pa・N・面積・湿度・水蒸気量・水滴量の計算に挑戦。電卓も使えます。":"Enterキーでも回答できます。";
+  $("score").textContent="0";
+  showScreen("game");renderQuestion();
+  if(m==="time"){
+    $("timer").textContent=timeLeft;
+    timerId=setInterval(()=>{
+      if(finished)return;
+      timeLeft=Math.max(0,timeLeft-1);$("timer").textContent=timeLeft;
+      if(timeLeft===0){stopTimer();finishGame("timeup");}
+    },1000);
+  }
+}
+function renderQuestion(){
+  if(index>=selected.length){finishGame("complete");return;}
+  if(mode==="calculation")calcClear();
+  locked=false;
+  $("count").textContent=(index+1)+" / "+selected.length;
+  $("qnum").textContent="QUESTION "+String(index+1).padStart(2,"0");
+  $("question").textContent=selected[index].q;
+  $("progressBar").style.width=(index/selected.length*100)+"%";
+  $("answer").value="";$("answer").disabled=false;
+  $("submitBtn").disabled=false;$("submitBtn").textContent="回答する";
+  $("feedback").textContent="";$("feedback").className="feedback";
+  if(mode==="calculation") $("calcDisplay").focus({preventScroll:true});
+  else $("answer").focus({preventScroll:true});
+}
+function submitAnswer(){
+  if(locked||finished)return;
+  const field=$("answer"),raw=field.value.trim();
+  if(!raw){$("feedback").textContent="答えを入力してください。";return;}
+  const item=selected[index];
+  const ok=item.a.map(normalize).includes(normalize(raw)) ||
+    (mode==="calculation" && item.a.some(a=>normalize(a)===normalize(raw).replace(/(pa|n|m²|m2|g\/m³|g\/m3|%)/g,"")));
+  locked=true;field.disabled=true;$("submitBtn").disabled=false;$("submitBtn").textContent="次の問題へ　→";
+  const fb=$("feedback");
+  if(ok){score++;$("score").textContent=score;fb.textContent="正解！";fb.className="feedback good";}
+  else{fb.textContent="不正解。正解："+item.a[0]+(item.unit?" "+item.unit:"");fb.className="feedback bad";}
+  if(mode==="calculation" && item.explain){
+    const explain=document.createElement("div");explain.className="small";explain.style.marginTop="5px";explain.textContent=item.explain;fb.appendChild(explain);
+  }
+  history.push({q:item.q,user:raw,answer:item.a[0],ok});
+  if(mode==="survival"&&!ok){
+    $("submitBtn").textContent="結果を見る　→";
+    return;
+  }
+  if(mode==="calculation") $("calcDisplay").focus({preventScroll:true});
+}
+function advanceQuestion(){
+  if(!locked||finished)return;
+  if(mode==="survival"&&!history[history.length-1].ok){finishGame("miss");return;}
+  index++;
+  renderQuestion();
+}
+function stopTimer(){if(timerId!==null){clearInterval(timerId);timerId=null;}}
+function finishGame(reason){
+  if(finished)return;finished=true;stopTimer();
+  const attempted=history.length,rate=attempted?Math.round(score/attempted*100):0;
+  $("progressBar").style.width=(index/selected.length*100)+"%";
+  $("resultTitle").textContent=reason==="miss"?"サバイバル終了！":reason==="timeup"?"タイムアップ！":"チャレンジ終了！";
+  $("resultScore").textContent=score+" / "+attempted;
+  $("resultMessage").textContent=reason==="complete"?"10問完了！おつかれさま！":reason==="miss"?"間違えたところを復習して、再挑戦しよう。":"時間切れ！次はもっと多く正解を目指そう。";
+  $("accuracy").textContent=rate+"%";$("resultMode").textContent=modeNames[mode];
+  const review=$("review");review.replaceChildren();
+  const heading=document.createElement("b");heading.textContent="今回の振り返り";review.appendChild(heading);
+  history.forEach((h,i)=>{
+    const d=document.createElement("div");
+    const mark=document.createElement("b");mark.textContent=h.ok?"○ ":"× ";mark.style.color=h.ok?"#57d6c5":"#ff7185";
+    const q=document.createTextNode((i+1)+". "+h.q);
+    const detail=document.createElement("div");detail.className="small";
+    detail.textContent="あなたの答え："+h.user+" ／ 正解："+h.answer;
+    d.append(mark,q,detail);review.appendChild(d);
+  });
+  showScreen("result");
+}
+function quitGame(){stopTimer();finished=true;showScreen("mode");}
+
+function updateCalc(){$("calcDisplay").textContent=calcExpression||"0";}
+function calcInput(value){if(calcExpression.length<36){calcExpression+=value;updateCalc();}}
+function calcClear(){calcExpression="";updateCalc();}
+function calcBack(){calcExpression=calcExpression.slice(0,-1);updateCalc();}
+function calcEquals(){
+  try{
+    if(!calcExpression||!/^[-0-9+×÷(). ]+$/.test(calcExpression))throw new Error();
+    const safe=calcExpression.replace(/×/g,"*").replace(/÷/g,"/");
+    const result=Function('"use strict";return ('+safe+')')();
+    if(!Number.isFinite(result))throw new Error();
+    calcExpression=String(Number(result.toFixed(8)));updateCalc();
+  }catch(e){$("calcDisplay").textContent="計算できません";calcExpression="";}
+}
+function calcUseAnswer(){if(calcExpression){$("answer").value=calcExpression;$("answer").focus();}}
+
+document.addEventListener("keydown",e=>{
+  if(finished)return;
+
+  // Enter: 回答前なら回答、回答後なら次の問題へ
+  if(e.key==="Enter"){
+    if(locked){
+      e.preventDefault();
+      advanceQuestion();
+      return;
+    }
+    if(e.target===$("answer")){
+      e.preventDefault();
+      submitAnswer();
+      return;
+    }
+    if(mode==="calculation"&&!$("calculator").hidden){
+      e.preventDefault();
+      if(calcExpression) calcEquals();
+      else if($("answer").value.trim()) submitAnswer();
+      return;
+    }
+    if(e.target!==$("answer")){
+      e.preventDefault();
+      submitAnswer();
+      return;
+    }
+  }
+
+  if(mode!=="calculation"||$("calculator").hidden)return;
+
+  // 答え欄を編集中のBackspaceは通常どおり文字を消す
+  if(e.target===$("answer"))return;
+
+  const keys={
+    Numpad0:"0",Numpad1:"1",Numpad2:"2",Numpad3:"3",Numpad4:"4",
+    Numpad5:"5",Numpad6:"6",Numpad7:"7",Numpad8:"8",Numpad9:"9",
+    NumpadDecimal:".",NumpadAdd:"+",NumpadSubtract:"-",NumpadMultiply:"×",
+    NumpadDivide:"÷",NumpadParenLeft:"(",NumpadParenRight:")"
+  };
+  if(Object.prototype.hasOwnProperty.call(keys,e.code)){
+    e.preventDefault();calcInput(keys[e.code]);return;
+  }
+  if(e.code==="NumpadEnter"||e.code==="NumpadEqual"){
+    e.preventDefault();calcEquals();return;
+  }
+  if(e.key==="Backspace"||e.code==="NumpadBackspace"){
+    e.preventDefault();calcBack();return;
+  }
+  if(e.code==="NumpadClear"){
+    e.preventDefault();calcClear();
+  }
+});
+
+</script>
+</body>
+</html>
